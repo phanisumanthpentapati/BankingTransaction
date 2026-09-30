@@ -11,24 +11,54 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final EmailService emailService;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(
+            NotificationRepository notificationRepository,
+            EmailService emailService) {
+
         this.notificationRepository = notificationRepository;
+        this.emailService = emailService;
     }
 
     // Create notification
     public Notification createNotification(Notification notification) {
 
         if (notification.getNotificationDate() == null) {
-            notification.setNotificationDate(LocalDateTime.now());
+            notification.setNotificationDate(
+                    LocalDateTime.now()
+            );
         }
 
-        return notificationRepository.save(notification);
+        Notification savedNotification =
+                notificationRepository.save(notification);
+
+        // Send email
+        emailService.sendEmail(
+                "mnew70325@gmail.com",
+                "BankEase Transaction Notification",
+                "Dear Customer,\n\n"
+                        + notification.getMessage()
+                        + "\n\n"
+                        + "Account Number: "
+                        + notification.getAccountNumber()
+                        + "\n"
+                        + "Transaction Type: "
+                        + notification.getType()
+                        + "\n"
+                        + "Date: "
+                        + notification.getNotificationDate()
+                        + "\n\n"
+                        + "Thank you for using BankEase.\n\n"
+                        + "Regards,\n"
+                        + "BankEase Team"
+        );
+
+        return savedNotification;
     }
 
     // Get all notifications
     public List<Notification> getAllNotifications() {
-
         return notificationRepository.findAll();
     }
 
@@ -37,7 +67,9 @@ public class NotificationService {
 
         return notificationRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Notification not found"));
+                        new RuntimeException(
+                                "Notification not found"
+                        ));
     }
 
     // Get notifications by account number
@@ -52,7 +84,9 @@ public class NotificationService {
     public void deleteNotification(Long id) {
 
         if (!notificationRepository.existsById(id)) {
-            throw new RuntimeException("Notification not found");
+            throw new RuntimeException(
+                    "Notification not found"
+            );
         }
 
         notificationRepository.deleteById(id);
